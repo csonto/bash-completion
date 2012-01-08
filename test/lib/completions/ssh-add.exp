@@ -1,20 +1,32 @@
+
 proc setup {} {
     save_env
+    # NOTE: Changing dir to $SRCDIR is necessary because file locations in the
+    #       ssh config files (e.g. UserKnownHostsFile) are relative to $SRCDIR.
+    assert_bash_exec {cd $SRCDIR/fixtures/ssh}
 }
 
-
 proc teardown {} {
-    assert_env_unmodified
+    assert_bash_exec {cd $TESTDIR}
+    assert_env_unmodified {
+        /BASH_LINENO=/d
+        /BASH_SOURCE=/d
+        /OLDPWD=/d
+    }
 }
 
 
 setup
 
-
-assert_complete_any "ssh-add "
-
-
-sync_after_int
-
+set test "Tab should complete with possible private keys"
+    # Try completion
+set cmd "ssh-add "
+send "$cmd\t"
+set expected "^$cmd\r\ndsa_key *ec_key *rsa_key\r\n/@$cmd$"
+expect {
+    -re $expected  { pass "$test" }
+    -re /@ { unresolved "$test at prompt" }
+    default { unresolved "$test" }
+}
 
 teardown

@@ -6,18 +6,53 @@ _ssh_add()
     _init_completion || return
 
     case $prev in
-        -t|-s|-e)
-            return
+        -t)
+            return 0
+            ;;
+        -s|-e)
+            _ssh_pkcs11
+            return 0
             ;;
     esac
-
     if [[ $cur == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_help "$1" -? )' -- "$cur" ) )
         return
-    fi
+    else
+        local currentkeys
+        currentkeys=$(
+            local line
+            ssh-add -l | while read line ; do
+                if [[ $line =~ ^[0-9]+\ ([0-9a-f][0-9a-f]:?)+\ (.+) ]]; then
+                    echo ${BASH_REMATCH[2]% (*)}
+                fi 
+            done
+        )
 
-    _filedir
+        set -- "${words[@]}"
+        while [[ $# -gt 0 ]]; do
+            if [[ $1 == -d* || $1 == -*d* ]]; then
+                # option -d is for deleting keys
+                compopt -o plusdirs
+                COMPREPLY=( $( compgen -W '${currentkeys}' -- "$cur" ) )
+                return
+            fi
+            shift
+        done
+
+        _ssh_identity_files
+        # don't try to add an identitykey that we already have
+        local i
+        for (( i=0; i < ${#COMPREPLY[@]}; i++ )); do
+            local IFS=$'\n'
+            for line in ${currentkeys}; do
+                if [[ ${COMPREPLY[$i]} == $line ]] ; then
+                    unset COMPREPLY[$i]
+                fi
+            done
+        done
+        return
+    fi
 } &&
-complete -F _ssh_add ssh-add
+complete -F _ssh_add -o plusdirs ssh-add
 
 # ex: ts=4 sw=4 et filetype=sh
