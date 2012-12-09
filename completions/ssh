@@ -112,6 +112,81 @@ _ssh_suboption_check()
     return 1
 }
 
+_ssh_pkcs11() {
+    COMPREPLY=()
+
+    local file
+    for file in /{usr,opt}/{local,}/{lib,lib64}/{openssl,opensc,}/{engine,}/"${cur}"*pkcs11.so ; do
+        if [[ -r $file ]]; then
+           COMPREPLY+=( ${file//\/\//\/} )
+        fi
+    done
+
+    return
+}
+
+_ssh_identity_files() {
+    local file
+
+    COMPREPLY=()
+    # ssh config files
+    #local -a config
+    #if [[ ! $# ]]; then
+    #    [[ -r $1 ]] && config+=( "$1" )
+    #else
+    #    for file in /etc/ssh/ssh_config ~/.ssh/config ~/.ssh2/config; do
+    #        [[ -r $file ]] && config+=( $file )
+    #    done
+    #fi
+
+    #for file in ${config[@]}; do
+    #    local line
+    #    while read line; do
+    #        echo line=$line
+    #        if [[ $line =~ ^[:space:]*[iI][Dd][Ee][Nn][Tt][Ii][Tt][Yy][Ff][Ii][Ll][Ee]\ *\"?([^\"[:space:]]*) ]]; then
+    #            echo found=${BASH_REMATCH[1]} 
+    #            if [[ -r ${BASH_REMATCH[1]} ]]; then
+    #                COMPREPLY+=( ${BASH_REMATCH[1]} )
+    #            fi
+    #        fi
+    #    done < ${file}
+    #done
+
+    local IFS=$'\n'
+    local match='^-----BEGIN (EC|[RD]SA) PRIVATE KEY-----'
+    for file in $( compgen -f -- "${cur}"; [[ -d ~/.ssh/ ]] && compgen -f -- ~/.ssh/"${cur}" ) ; do
+        if [[ -r $file && -f ${file} ]]; then
+            local line
+            read -t 1 line < "${file}"
+            if [[ $line =~ $match ]]; then
+                COMPREPLY+=( ${file} )
+            fi
+        fi
+    done
+    
+    return
+}
+
+_ssh_configfile()
+{
+    # localfile set in parent
+
+    # Search COMP_WORDS for '-F configfile' or '-Fconfigfile' argument
+    set -- "${words[@]}"
+    while [[ $# -gt 0 ]]; do
+        if [[ $1 == -F* ]]; then
+            if [[ ${#1} -gt 2 ]]; then
+                configfile="$(dequote "${1:2}")"
+            else
+                shift
+                [[ $1 ]] && configfile="$(dequote "$1")"
+            fi
+            break
+        fi
+        shift
+    done
+}
+
 _ssh()
 {
     local cur prev words cword
@@ -122,8 +197,15 @@ _ssh()
 
     _ssh_suboption_check && return 0
 
+    _ssh_configfile
+
     case $prev in
-        -F|-i|-S)
+        -i)
+            compopt -o plusdirs
+            _ssh_identity_files $configfile
+            return 0
+            ;;
+        -F|-S)
             _filedir
             return 0
             ;;
@@ -155,7 +237,11 @@ _ssh()
             _ip_addresses
             return 0
             ;;
-        -D|-e|-I|-L|-p|-R|-W)
+        -I)
+            _ssh_pkcs11
+            return 0
+            ;;
+        -D|-e|-L|-O|-p|-R|-W)
             return 0
             ;;
     esac
@@ -169,20 +255,7 @@ _ssh()
     elif [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
     else
-        # Search COMP_WORDS for '-F configfile' or '-Fconfigfile' argument
-        set -- "${words[@]}"
-        while [[ $# -gt 0 ]]; do
-            if [[ $1 == -F* ]]; then
-                if [[ ${#1} -gt 2 ]]; then
-                    configfile="$(dequote "${1:2}")"
-                else
-                    shift
-                    [[ $1 ]] && configfile="$(dequote "$1")"
-                fi
-                break
-            fi
-            shift
-        done
+
         _known_hosts_real -a -F "$configfile" "$cur"
         if [[ $cword -ne 1 ]]; then
             compopt -o filenames
@@ -204,9 +277,15 @@ _sftp()
     local configfile
 
     _ssh_suboption_check && return 0
+    _ssh_configfile
 
     case $prev in
-        -b|-F|-i)
+        -i)
+            compopt -o plusdirs
+            _ssh_identity_files $configfile
+            return 0
+            ;;
+        -b|-F)
             _filedir
             return 0
             ;;
@@ -232,20 +311,6 @@ _sftp()
     elif [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
     else
-        # Search COMP_WORDS for '-F configfile' argument
-        set -- "${words[@]}"
-        while [[ $# -gt 0 ]]; do
-            if [[ $1 == -F* ]]; then
-                if [[ ${#1} -gt 2 ]]; then
-                    configfile="$(dequote "${1:2}")"
-                else
-                    shift
-                    [[ $1 ]] && configfile="$(dequote "$1")"
-                fi
-                break
-            fi
-            shift
-        done
         _known_hosts_real -a -F "$configfile" "$cur"
     fi
 
@@ -331,11 +396,18 @@ _scp()
         return 0
     }
 
+    _ssh_configfile
+
     case $prev in
         -l|-P)
             return 0
             ;;
-        -F|-i|-S)
+        -i)
+            compopt -o plusdirs
+            _ssh_identity_files $configfile
+            return 0
+            ;;
+        -F|-S)
             _filedir
             compopt +o nospace
             return 0
@@ -362,20 +434,6 @@ _scp()
         cur=${cur#-F}
         prefix=-F
     else
-        # Search COMP_WORDS for '-F configfile' or '-Fconfigfile' argument
-        set -- "${words[@]}"
-        while [[ $# -gt 0 ]]; do
-            if [[ $1 == -F* ]]; then
-                if [[ ${#1} -gt 2 ]]; then
-                    configfile="$(dequote "${1:2}")"
-                else
-                    shift
-                    [[ $1 ]] && configfile="$(dequote "$1")"
-                fi
-                break
-            fi
-            shift
-        done
 
         case $cur in
             -*)
