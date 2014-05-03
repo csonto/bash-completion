@@ -129,28 +129,6 @@ _ssh_identity_files() {
     local file
 
     COMPREPLY=()
-    # ssh config files
-    #local -a config
-    #if [[ ! $# ]]; then
-    #    [[ -r $1 ]] && config+=( "$1" )
-    #else
-    #    for file in /etc/ssh/ssh_config ~/.ssh/config ~/.ssh2/config; do
-    #        [[ -r $file ]] && config+=( $file )
-    #    done
-    #fi
-
-    #for file in ${config[@]}; do
-    #    local line
-    #    while read line; do
-    #        echo line=$line
-    #        if [[ $line =~ ^[:space:]*[iI][Dd][Ee][Nn][Tt][Ii][Tt][Yy][Ff][Ii][Ll][Ee]\ *\"?([^\"[:space:]]*) ]]; then
-    #            echo found=${BASH_REMATCH[1]} 
-    #            if [[ -r ${BASH_REMATCH[1]} ]]; then
-    #                COMPREPLY+=( ${BASH_REMATCH[1]} )
-    #            fi
-    #        fi
-    #    done < ${file}
-    #done
 
     local IFS=$'\n'
     local match='^-----BEGIN (EC|[RD]SA) PRIVATE KEY-----'
@@ -163,7 +141,7 @@ _ssh_identity_files() {
             fi
         fi
     done
-    
+
     return
 }
 

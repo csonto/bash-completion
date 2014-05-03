@@ -1,10 +1,10 @@
-
 proc setup {} {
     save_env
     # NOTE: Changing dir to $SRCDIR is necessary because file locations in the
     #       ssh config files (e.g. UserKnownHostsFile) are relative to $SRCDIR.
     assert_bash_exec {cd $SRCDIR/fixtures/ssh}
 }
+
 
 proc teardown {} {
     assert_bash_exec {cd $TESTDIR}
