@@ -29,4 +29,6 @@ expect {
     default { unresolved "$test" }
 }
 
+sync_after_int
+
 teardown

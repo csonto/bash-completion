@@ -45,6 +45,7 @@ _ssh_add()
         local i
         for (( i=0; i < ${#COMPREPLY[@]}; i++ )); do
             local IFS=$'\n'
+            local line
             for line in ${currentkeys}; do
                 if [[ ${COMPREPLY[$i]} == $line ]] ; then
                     unset COMPREPLY[$i]
