@@ -1,22 +1,21 @@
 proc setup {} {
     save_env
-    # NOTE: Changing dir to $SRCDIR is necessary because file locations in the
-    #       ssh config files (e.g. UserKnownHostsFile) are relative to $SRCDIR.
-    assert_bash_exec {cd $SRCDIR/fixtures/ssh}
 }
 
 
 proc teardown {} {
-    assert_bash_exec {cd $TESTDIR}
-    assert_env_unmodified {
-        /BASH_LINENO=/d
-        /BASH_SOURCE=/d
-        /OLDPWD=/d
-    }
+    assert_env_unmodified {/OLDPWD=/d}
 }
 
 
 setup
+
+
+set test "First argument should complete partial hostname"
+assert_complete_partial [get_known_hosts] ssh "l" $test -ltrim-colon-completions
+
+
+sync_after_int
 
 
 set test "Tab should complete both commands and hostname"
@@ -59,18 +58,21 @@ assert_complete [get_known_hosts "bas"] $cmd $test
 sync_after_int
 
 
-set test "First argument should complete partial hostname"
-assert_complete_partial [get_known_hosts] ssh "l" $test -ltrim-colon-completions
-
-
-sync_after_int
-
-
+set dir $::srcdir/fixtures/ssh
 set test "-F should complete filename"
 assert_complete "-Fspaced\\ \\ conf" "ssh -Fsp" $test
 
 
 sync_after_int
 
+set test "should complete identity files"
+set dir $::srcdir/fixtures/ssh
+set files [split [exec bash -c "cd $dir && find ~/.ssh  . -mindepth 1 -maxdepth 1 \
+           -type f -exec fgrep -q 'PRIVATE KEY-----' {} \\\; -printf '%P\\n' "] "\n"]
+
+assert_complete_dir $files "ssh -i " $dir $test
+
+
+sync_after_int
 
 teardown
