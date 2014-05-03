@@ -14,7 +14,12 @@ _ssh_keygen()
             _known_hosts_real "$cur"
             return
             ;;
-        -f|-G|-K|-s|-T)
+        -f)
+            compopt -o plusdirs
+            _ssh_identity_files
+            return
+            ;;
+        -G|-K|-s|-T)
             _filedir
             return
             ;;
