@@ -2,9 +2,11 @@
 
 _ssh_ciphers()
 {
-    COMPREPLY+=( $( compgen -W '3des-cbc aes128-cbc aes192-cbc aes256-cbc
+    COMPREPLY+=( $( compgen -W '3des-cbc aes128-gcm@openssh.com
+        aes256-gcm@openssh.com chacha20-poly1305@openssh.com
+        aes128-cbc aes192-cbc aes256-cbc
         aes128-ctr aes192-ctr aes256-ctr arcfour128 arcfour256 arcfour
-        blowfish-cbc cast128-cbc' -- "$cur" ) )
+        blowfish-cbc cast128-cbc rijndael-cbc@lysator.liu.se' -- "$cur" ) )
 }
 
 _ssh_macs()
@@ -17,6 +19,8 @@ _ssh_options()
 {
     compopt -o nospace
     COMPREPLY=( $( compgen -S = -W 'AddressFamily BatchMode BindAddress
+        CanonicalDomains CanonicalizeFallbackLocal CanonicalizeHostname
+        CanonicalizeMaxDots CanonicalizePermittedCNAMEs
         ChallengeResponseAuthentication CheckHostIP Cipher Ciphers
         ClearAllForwardings Compression CompressionLevel ConnectionAttempts
         ConnectTimeout ControlMaster ControlPath ControlPersist DynamicForward
@@ -26,14 +30,17 @@ _ssh_options()
         GSSAPIDelegateCredentials GSSAPIKeyExchange GSSAPIRenewalForcesRekey
         GSSAPIServerIdentity GSSAPITrustDns HashKnownHosts Host
         HostbasedAuthentication HostKeyAlgorithms HostKeyAlias HostName
-        IdentityFile IdentitiesOnly IPQoS KbdInteractiveDevices KexAlgorithms
+        IdentityFile IdentitiesOnly IPQoS KbdInteractiveAuthentication
+        KbdInteractiveDevices KexAlgorithms
         LocalCommand LocalForward LogLevel MACs
         NoHostAuthenticationForLocalhost NumberOfPasswordPrompts
         PasswordAuthentication PermitLocalCommand PKCS11Provider Port
-        PreferredAuthentications Protocol ProxyCommand PubkeyAuthentication
-        RekeyLimit RemoteForward RequestTTY RhostsRSAAuthentication
+        PreferredAuthentications Protocol ProxyCommand ProxyUseFdpass
+        PubkeyAuthentication
+        RekeyLimit RemoteForward RequestTTY RevokedHostKeys RhostsRSAAuthentication
         RSAAuthentication SendEnv ServerAliveCountMax ServerAliveInterval
-        SmartcardDevice StrictHostKeyChecking TCPKeepAlive Tunnel TunnelDevice
+        SmartcardDevice StreamLocalBindMask StreamLocalBindUnlink
+        StrictHostKeyChecking TCPKeepAlive Tunnel TunnelDevice
         UsePrivilegedPort User UserKnownHostsFile VerifyHostKeyDNS
         VisualHostKey XAuthLocation' -- "$cur" ) )
 }
@@ -56,7 +63,8 @@ _ssh_suboption()
         HashKnownHosts|HostbasedAuthentication|IdentitiesOnly|\
         KbdInteractiveAuthentication|KbdInteractiveDevices|\
         NoHostAuthenticationForLocalhost|PasswordAuthentication|\
-        PubkeyAuthentication|RhostsRSAAuthentication|RSAAuthentication|\
+        ProxyUseFdpass|PubkeyAuthentication|RhostsRSAAuthentication|\
+        RSAAuthentication|StreamLocalBindUnlink|\
         StrictHostKeyChecking|TCPKeepAlive|UsePrivilegedPort|\
         VerifyHostKeyDNS|VisualHostKey)
             COMPREPLY=( $( compgen -W 'yes no' -- "$cur" ) )
