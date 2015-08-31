@@ -112,6 +112,17 @@ _lvm_sizes()
     COMPREPLY=( $( compgen -W "$* $cur $(_suffixes "${cur}" "k,K,m,M,g,G,t,T,p,P,e,E")" -- "$cur" ) )
 }
 
+_lvm_extents()
+{
+    local prefix=$cur
+    if [[ ${prefix} == *%* ]]; then
+        prefix=${prefix%\%*}
+        COMPREPLY=( $( compgen -W "$* $(_suffixes "${prefix}%" "VG,LV,PVS,FREE,ORIGIN")" -- "$cur" ) )
+    else
+        COMPREPLY=( $( compgen -W "$* $prefix $(_suffixes "${prefix}%" "VG,LV,PVS,FREE,ORIGIN")" -- "$cur" ) )
+    fi
+}
+
 # @param $1 glob matching args known to take an argument
 _lvm_count_args()
 {
@@ -804,6 +815,10 @@ _lvcreate()
             _lvm_sizes
             return 0
             ;;
+        -l|--extents)
+            _lvm_extents
+            return 0
+            ;;
         -p|--permission)
             COMPREPLY=( $( compgen -W 'r rw' -- "$cur" ) )
             return 0
@@ -882,8 +897,12 @@ _lvreduce()
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
             return 0
             ;;
+        -l|--extents)
+            _lvm_extents "-"
+            return 0
+            ;;
         -L|--size)
-            _lvm_sizes "+"
+            _lvm_sizes "-"
             return 0
             ;;
     esac
@@ -906,8 +925,12 @@ _lvresize()
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
             return 0
             ;;
+        -l|--extents)
+            _lvm_extents "+ -"
+            return 0
+            ;;
         -L|--size)
-            _lvm_sizes "-"
+            _lvm_sizes "+ -"
             return 0
             ;;
     esac
@@ -936,8 +959,12 @@ _lvextend()
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
             return 0
             ;;
+        -l|--extents)
+            _lvm_extents "+"
+            return 0
+            ;;
         -L|--size)
-            _lvm_sizes "+ -"
+            _lvm_sizes "+"
             return 0
             ;;
     esac
