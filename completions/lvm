@@ -12,6 +12,65 @@ _lvm_physicalvolumes()
         sed -n -e 's|^.*PV \(.*\) VG.*$|\1|p' )" -- "$cur" ) )
 }
 
+_lvm_find_lvs()
+{
+    # USAGE: _lvm_find_lvs [--canonical] [FILTER]
+    local canonical=
+    if [[ $1 == --canonical ]]; then
+        # Will ignore all non-canonical paths (all but VG/LV)
+        canonical=1
+        shift
+    fi
+    local lvs="$(lvscan 2>/dev/null | sed -n -e "s|^.*'\\(.*\\)'.*\$|\\1|p")"
+    local d
+    # FILTER:
+    if [[ -n $1 ]]; then
+        # /dev/VG/* VG/*
+        for d in $lvs; do
+            if [[ -n "$(lvs -S "$1" $d)" ]]; then
+                if [[ -n $canonical ]]; then
+                    echo -n " ${d#/dev/} "
+                else
+                    echo -n " $d ${d#/dev/} "
+                fi
+            fi
+        done
+        [[ -n $canonical ]] && return
+        # /dev/mapper/*
+        for d in /dev/mapper/*; do
+            if [[ -n "$(lvs -S "$1" $d 2>/dev/null)" ]]; then
+                echo -n " $d "
+            fi
+        done
+        return
+    fi
+    # ALL:
+    # /dev/VG/* VG/*
+    for d in $lvs; do
+        if [[ -n $canonical ]]; then
+            echo -n " ${d#/dev/} "
+        else
+            echo -n " $d ${d#/dev/} "
+        fi
+    done
+    [[ -n $canonical ]] && return
+    # /dev/mapper/*
+    for d in /dev/mapper/*; do
+        if [[ -n "$(lvs $d 2>/dev/null)" ]]; then
+            echo -n " $d "
+        fi
+    done
+}
+
+_lvm_lvs()
+{
+    if [[ -z $cur ]]; then
+        COMPREPLY=( $(compgen -W "$(_lvm_find_lvs --canonical "$1")" ) )
+    else
+        COMPREPLY=( $(compgen -W "$(_lvm_find_lvs "$1")" -- "$cur" ) )
+    fi
+}
+
 _lvm_logicalvolumes()
 {
     COMPREPLY=( $(compgen -W "$( lvscan 2>/dev/null | \
@@ -23,6 +82,11 @@ _lvm_logicalvolumes()
             [[ ${COMPREPLY[i]} == */control ]] && unset 'COMPREPLY[i]'
         done
     fi
+}
+
+_lvm_thinpools()
+{
+    _lvm_lvs "segtype = thin-pool"
 }
 
 _lvm_units()
@@ -52,7 +116,7 @@ _lvm_count_args()
     done
 }
 
-# TODO: Attempt to override default _parse_usage:
+# Override default _parse_usage to handle options starting with `{`:
 _parse_lvm_usage()
 {
     eval local cmd=$( quote "$1" )
@@ -729,6 +793,10 @@ _lvcreate()
             ;;
         -p|--permission)
             COMPREPLY=( $( compgen -W 'r rw' -- "$cur" ) )
+            return 0
+            ;;
+        --thinpool)
+            _lvm_thinpools
             return 0
             ;;
         -n|--name)
