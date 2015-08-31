@@ -883,7 +883,7 @@ _lvreduce()
             return 0
             ;;
         -L|--size)
-            _lvm_sizes
+            _lvm_sizes "+"
             return 0
             ;;
     esac
@@ -907,7 +907,7 @@ _lvresize()
             return 0
             ;;
         -L|--size)
-            _lvm_sizes
+            _lvm_sizes "-"
             return 0
             ;;
     esac
@@ -937,7 +937,7 @@ _lvextend()
             return 0
             ;;
         -L|--size)
-            _lvm_sizes
+            _lvm_sizes "+ -"
             return 0
             ;;
     esac
