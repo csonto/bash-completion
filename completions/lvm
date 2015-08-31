@@ -1041,26 +1041,33 @@ complete -F _lvextend lvextend
 # TODO: Implement this!
 complete -F _lvm_default_completion lvconvert
 
+_lvm_commands() {
+    COMPREPLY=( $( compgen -W 'devtypes dumpconfig formats help lvchange lvconvert lvcreate lvdisplay
+        lvextend lvmchange lvmdiskscan lvmsadc lvmsar lvreduce lvremove
+        lvrename lvresize lvs lvscan pvchange pvck pvcreate pvdata pvdisplay
+        pvmove pvremove pvresize pvs pvscan segtypes tags vgcfgbackup vgcfgrestore
+        vgchange vgck vgconvert vgcreate vgdisplay vgexport vgextend
+        vgimport vgmerge vgmknodes vgreduce vgremove vgrename vgs vgscan
+        vgsplit version' -- "$1" ) )
+}
+
 _lvm()
 {
-    local cur prev words cword cmd
-    _init_lvm_completion || return
+    local cur prev words cword
+    _init_completion || return
 
     if [[ $cword -eq 1 ]]; then
-        COMPREPLY=( $( compgen -W 'devtypes dumpconfig formats help lvchange lvconvert lvcreate lvdisplay
-            lvextend lvmchange lvmdiskscan lvmsadc lvmsar lvreduce lvremove
-            lvrename lvresize lvs lvscan pvchange pvck pvcreate pvdata pvdisplay
-            pvmove pvremove pvresize pvs pvscan segtypes tags vgcfgbackup vgcfgrestore
-            vgchange vgck vgconvert vgcreate vgdisplay vgexport vgextend
-            vgimport vgmerge vgmknodes vgreduce vgremove vgrename vgs vgscan
-            vgsplit version' -- "$cur" ) )
+        _lvm_commands "$cur"
     else
         case "${words[1]}" in
+            help)
+                _lvm_commands "$cur"
+                ;;
             pvchange|pvcreate|pvdisplay|pvmove|pvremove|pvresize|pvs|pvscan|\
             vgcfgbackup|vgcfgrestore|vgchange|vgck|vgconvert|vgcreate|\
             vgdisplay|vgexport|vgextend|vgimport|vgmerge|vgmknodes|vgreduce|\
             vgremove|vgrename|vgs|vgscan|vgsplit|lvchange|lvcreate|lvdisplay|\
-            lvextend|lvreduce|lvremove|lvrename|lvresize|lvscan|lvs)
+            lvextend|lvreduce|lvremove|lvrename|lvresize|lvscan|lvs|lvmdiskscan)
                 _${words[1]} || _lvm_default_completion
                 ;;
             case *)
