@@ -89,14 +89,27 @@ _lvm_thinpools()
     _lvm_lvs "segtype = thin-pool"
 }
 
+_suffixes()
+{
+    eval "echo $1{${2}}$3"
+}
+
 _lvm_units()
 {
-    COMPREPLY=( $( compgen -W 'h s b k m g t H K M G T' -- "$cur" ) )
+    if [[ $cur == *[a-zA-Z] ]]; then
+        COMPREPLY=( $( compgen -W "$cur" -- "$cur" ) )
+        return
+    fi
+    COMPREPLY=( $( compgen -W "$cur $(_suffixes "${cur}" "h,s,b,k,m,g,t,p,e,H,K,M,G,T,P,E")" -- "$cur" ) )
 }
 
 _lvm_sizes()
 {
-    COMPREPLY=( $( compgen -W 'k K m M g G t T' -- "$cur" ) )
+    if [[ $cur == *[a-zA-Z] ]]; then
+        COMPREPLY=( $( compgen -W "$cur" -- "$cur" ) )
+        return
+    fi
+    COMPREPLY=( $( compgen -W "$* $cur $(_suffixes "${cur}" "k,K,m,M,g,G,t,T,p,P,e,E")" -- "$cur" ) )
 }
 
 # @param $1 glob matching args known to take an argument
