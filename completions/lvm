@@ -186,6 +186,31 @@ _lvmdiskscan()
 } &&
 complete -F _lvmdiskscan lvmdiskscan
 
+_lvm_lv_size_options()
+{
+    case "$cur" in
+        --size=*|-L?*)
+            _lvm_sizes "${_SIZES_EXT}"
+            return 0
+            ;;
+        --extents=*|-l?*)
+            _lvm_extents "${_SIZES_EXT}"
+            return 0
+            ;;
+    esac
+    case "$prev" in
+        -L|--size)
+            _lvm_sizes "${_SIZES_EXT}"
+            return 0
+            ;;
+        --extents|-l)
+            _lvm_extents "${_SIZES_EXT}"
+            return 0
+            ;;
+    esac
+    return 1
+}
+
 _pvscan()
 {
     local cur prev words cword cmd
@@ -793,17 +818,10 @@ _lvcreate()
     local cur prev words cword cmd
     _init_lvm_completion || return
 
+    _SIZES_EXT= _lvm_lv_size_options && return 0
     case $prev in
         -A|-C|-M|-Z|--autobackup|--contiguous|--persistent|--zero)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
-            ;;
-        -L|--size)
-            _lvm_sizes
-            return 0
-            ;;
-        -l|--extents)
-            _lvm_extents
             return 0
             ;;
         -p|--permission)
@@ -879,17 +897,10 @@ _lvreduce()
     local cur prev words cword cmd
     _init_lvm_completion || return
 
+    _SIZES_EXT="-" _lvm_lv_size_options && return 0
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
-            ;;
-        -l|--extents)
-            _lvm_extents "-"
-            return 0
-            ;;
-        -L|--size)
-            _lvm_sizes "-"
             return 0
             ;;
     esac
@@ -907,17 +918,10 @@ _lvresize()
     local cur prev words cword cmd
     _init_lvm_completion || return
 
+    _SIZES_EXT="+ -" _lvm_lv_size_options && return 0
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
-            ;;
-        -l|--extents)
-            _lvm_extents "+ -"
-            return 0
-            ;;
-        -L|--size)
-            _lvm_sizes "+ -"
             return 0
             ;;
     esac
@@ -941,17 +945,10 @@ _lvextend()
     local cur prev words cword cmd
     _init_lvm_completion || return
 
+    _SIZES_EXT="+" _lvm_lv_size_options && return 0
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
-            ;;
-        -l|--extents)
-            _lvm_extents "+"
-            return 0
-            ;;
-        -L|--size)
-            _lvm_sizes "+"
             return 0
             ;;
     esac
