@@ -71,19 +71,6 @@ _lvm_lvs()
     fi
 }
 
-_lvm_logicalvolumes()
-{
-    COMPREPLY=( $(compgen -W "$( lvscan 2>/dev/null | \
-        sed -n -e "s|^.*'\(.*\)'.*$|\1|p" )" -- "$cur" ) )
-    if [[ $cur == /dev/mapper/* ]]; then
-        _filedir
-        local i
-        for i in ${!COMPREPLY[@]}; do
-            [[ ${COMPREPLY[i]} == */control ]] && unset 'COMPREPLY[i]'
-        done
-    fi
-}
-
 _lvm_thinpools()
 {
     _lvm_lvs "segtype = thin-pool"
@@ -320,7 +307,7 @@ _pvmove()
             return 0
             ;;
         -n|--name)
-            _lvm_logicalvolumes
+            _lvm_lvs
             return 0
     esac
 
@@ -752,7 +739,7 @@ _lvs()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvs lvs
@@ -772,7 +759,7 @@ _lvdisplay()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvdisplay lvdisplay
@@ -796,7 +783,7 @@ _lvchange()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvchange lvchange
@@ -828,7 +815,7 @@ _lvcreate()
             return 0
             ;;
         -n|--name)
-            _lvm_logicalvolumes
+            _lvm_lvs
             return 0
             ;;
     esac
@@ -862,7 +849,7 @@ _lvremove()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvremove lvremove
@@ -882,7 +869,7 @@ _lvrename()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvrename lvrename
@@ -910,7 +897,7 @@ _lvreduce()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_lvm_usage "$cmd" --help )' -- "$cur" ) )
     else
-        _lvm_logicalvolumes
+        _lvm_lvs
     fi
 } &&
 complete -F _lvreduce lvreduce
@@ -941,7 +928,7 @@ _lvresize()
         local args
         _lvm_count_args '@(-A|--autobackup|-L|--size)'
         if [[ $args -eq 0 ]]; then
-            _lvm_logicalvolumes
+            _lvm_lvs
         else
             _lvm_physicalvolumes
         fi
@@ -975,7 +962,7 @@ _lvextend()
         local args
         _lvm_count_args '@(-A|--autobackup|-L|--size)'
         if [[ $args -eq 0 ]]; then
-            _lvm_logicalvolumes
+            _lvm_lvs
         else
             _lvm_physicalvolumes
         fi
