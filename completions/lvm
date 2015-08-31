@@ -1,5 +1,64 @@
 # bash completion for lvm                                  -*- shell-script -*-
 
+_LVM_HELP_DELIM=" <==("
+_LVM_HELP_DELIM2=")"
+
+_lvm_compreply_help_strip()
+{
+    if [[ ${#COMPREPLY[@]} -eq 1 ]]; then
+        COMPREPLY[0]="${COMPREPLY[0]%%$_LVM_HELP_DELIM}"
+    fi
+}
+
+_lvm_compreply_help_str()
+{
+    local c="$1"
+    shift
+    local help="$*"
+    help="${help## }"
+    if [[ -n $help ]]; then
+        echo "$c$_LVM_HELP_DELIM$help$_LVM_HELP_DELIM2"
+    else
+        echo "$c"
+    fi
+}
+
+_lvm_compreply_help_map()
+{
+    local i=0 help item n=${#COMPREPLY[@]}
+    [[ -n $* ]] || return
+    if [[ $n -le 1 ]]; then
+        return
+    fi
+    while [[ $i -lt $n ]]; do
+        item="${COMPREPLY[$i]}"
+        help="$("$@" "$item")" && \
+        if [[ -n $help ]]; then
+            COMPREPLY[$i]=$(_lvm_compreply_help_str "$item" "$help")
+        fi
+        let 'i+=1'
+    done
+}
+
+_lvm_lv_help()
+{
+    # USAGE: _lvm_lv_help [--verbose] [-o FIELDS] LV
+    # TODO: --nameprefixes --separator=SEP ?
+    local lvsfields= verbose=
+    if [[ $1 == -v || $1 == --verbose ]]; then
+        shift
+        lvsfields="lv_size,segtype,devices,lv_attr"
+    fi
+    if [[ $1 == -o ]]; then
+      shift
+      lvsfields=$1
+      shift
+    fi
+    # segtype? mountpoint? fstype? attr? active? ro/rw?
+    # underlying devices? children devices?
+    lvs --noheadings --separator="," -o${lvsfields:-"lv_size,segtype"} "$1"
+}
+
 _lvm_volumegroups()
 {
     COMPREPLY=( $(compgen -W "$( vgscan 2>/dev/null | \
@@ -68,6 +127,9 @@ _lvm_lvs()
         COMPREPLY=( $(compgen -W "$(_lvm_find_lvs --canonical "$1")" ) )
     else
         COMPREPLY=( $(compgen -W "$(_lvm_find_lvs "$1")" -- "$cur" ) )
+    fi
+    if [[ -n $COMP_LVM_HINTS ]]; then
+        _lvm_compreply_help_map _lvm_lv_help
     fi
 }
 

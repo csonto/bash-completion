@@ -52,6 +52,11 @@ Environment variables
     for additional completions.  This may be a slow operation in some setups.
     Default is unset.
 
+*COMP_LVM_HINTS*::
+    If set and not null, completions for LVs will display LV name along with
+    its size and attributes.
+    Default is unset.
+
 *COMP_TAR_INTERNAL_PATHS*::
     If set and not null *before* sourcing bash_completion, `tar` completion
     will do correct path completion for tar file contents.  If unset or null,
